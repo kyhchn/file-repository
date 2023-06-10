@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -81,8 +82,16 @@ class DocumentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Document $document)
+    public function destroy($id)
     {
-        return Document::destroy($document->id);
+        $document = Document::findorfail($id);
+        $isSuccess = $document->delete();
+        if ($isSuccess) {
+            $filePath = str_replace('storage/', 'public/', $document->path);
+            Storage::delete($filePath);
+            return response()->json(['message' => 'Document deleted successfully'], 200);
+        } else {
+            return response()->json(['message' => 'Document not found'], 404);
+        }
     }
 }
